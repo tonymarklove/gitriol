@@ -1,0 +1,3 @@
+- Cache which directories exists so you don't have to go through the query then mkdir for every file.
+- Group uploads by directory, so there are as many remote CDs and MKDIRs.
+- Some more error checking.
