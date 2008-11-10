@@ -22,7 +22,7 @@ def get_password(msg)
 	stdin = Win32::Console.new(STD_INPUT_HANDLE)
 
 	while ch = stdin.Input
-		break if ch[5] == 13
+		break if ch[5] == 13 and str.length > 0
 		str += ch[5].chr if ch[1] == 1
 	end
 	
@@ -40,7 +40,7 @@ def error(msg)
 end
 
 
-
+USER_HOME_DIR = Gem.user_home
 GITRIOL_REPO_DIR = ENV['GITRIOL_REPO'] or error('no gitriol repo defined')
 
 def ftp_mkdir_p(ftp, path)
@@ -131,9 +131,21 @@ end
 def make_ftp_changes(updated_files, removed_files)
 	# Get username and password
 	puts "#{$uri.host} login:"
-	print 'username: '
-	username = STDIN.gets
-	password = get_password('password: ')
+	username = $uri.user
+	unless username
+		print 'username: '
+		username = STDIN.gets
+	end
+	
+	# Get the password from (in order): the remote uri, .gitriolpasswd, run-time
+	# input.
+	password = $uri.password
+	unless password
+		password = $passwords[CONFIG['name']]
+		unless password
+			password = get_password('password: ')
+		end
+	end
 
 	Net::FTP.open($uri.host, username, password) do |ftp|
 		ftp.chdir(FTP_ROOT)
@@ -170,6 +182,19 @@ def load_config
 		config = YAML.load_file('gitriol.yml')
 	rescue
 		error('Not a gitriol project')
+	end
+end
+
+def load_passwords
+	begin
+		file = "#{USER_HOME_DIR}/.gitriolpasswd"
+		if File.exists?(file)
+			YAML.load_file(file)
+		else
+			{}
+		end
+	rescue
+		error('error loading password file')
 	end
 end
 
@@ -286,6 +311,7 @@ end
 # Run the program.
 CONFIG = load_config
 $updates = {}
+$passwords = load_passwords
 
 $uri = URI.parse(CONFIG['remote'])
 FTP_ROOT = $uri.path
