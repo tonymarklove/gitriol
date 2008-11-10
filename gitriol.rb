@@ -1,3 +1,4 @@
+#! ruby
 # usage: gitriol COMMAND [ARGS]
 #
 # common commands:
