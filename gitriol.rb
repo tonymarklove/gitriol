@@ -12,22 +12,10 @@ require 'pathname'
 require 'getoptlong'
 require 'rdoc/usage'
 
-require 'Win32/console'
+require 'highline/import'
 
 def get_password(msg)
-	print msg
-	
-	str = ''
-	include Win32::Console::Constants
-	stdin = Win32::Console.new(STD_INPUT_HANDLE)
-
-	while ch = stdin.Input
-		break if ch[5] == 13 and str.length > 0
-		str += ch[5].chr if ch[1] == 1
-	end
-	
-	puts
-	str.strip
+	ask(msg) { |q| q.echo = false }
 end
 
 def git(params)
