@@ -239,18 +239,6 @@ end
 
 def cmd_deploy
 	common_setup
-=begin example option parser
-	opts = GetoptLong.new(
-		['--apple', '-a', GetoptLong::NO_ARGUMENT]
-	)
-	
-	opts.each do |opt, arg|
-		case opt
-			when '--apple'
-				puts 'apple'
-		end
-	end
-=end
 
 	to_commit = command_line_commit
 	update_to_commit(to_commit)
@@ -299,6 +287,49 @@ def cmd_init
 	make_changes(to_commit, updated_files, removed_files)
 end
 
+def cmd_password
+	delete = false
+	project = ''
+	
+	opts = GetoptLong.new(
+		['--delete', '-d', GetoptLong::NO_ARGUMENT],
+		['--project', '-p', GetoptLong::REQUIRED_ARGUMENT]
+	)
+	
+	opts.each do |opt, arg|
+		case opt
+			when '--delete'
+				delete = true
+			when '--project'
+				project = arg
+		end
+	end
+
+	unless project
+		print 'project: '
+		project = STDIN.gets.strip
+	end
+	
+	# Delete or add as per users request.
+	if delete
+		$passwords.delete(project)
+	else
+		password = get_password('password: ')
+		passconfirm = get_password('confirm password: ')
+		
+		if password != passconfirm
+			error('passwords don\'t match')
+		end
+		
+		$passwords[project] = password
+	end
+	
+	# Ok. Now write the password file out again.
+	File.open("#{USER_HOME_DIR}/.gitriolpasswd", 'w') do |f|
+		f.write $passwords.to_yaml
+	end	
+end
+
 def missing_cmd(cmd)
 	if cmd
 		puts "'#{cmd}' is not a gitriol command"
@@ -326,6 +357,8 @@ case action
 		cmd_log
 	when 'init'
 		cmd_init
+	when 'password'
+		cmd_password
 	else
 		missing_cmd(action)
 end
