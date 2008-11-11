@@ -64,7 +64,7 @@ def nlst_all(ftp)
 	return files
 end
 
-TEXT_EXTS = ['php', 'css', 'js', 'txt', 'html', 'xml']
+TEXT_EXTS = ['php', 'css', 'js', 'txt', 'html', 'xml', 'yml']
 
 def upload_file(ftp, path)
 	ftp.chdir(FTP_ROOT)
@@ -153,7 +153,14 @@ def make_remote_changes(updated_files, removed_files)
 	make_ftp_changes(updated_files, removed_files)
 end
 
+def filter_ignored_files(files)
+	files.reject {|f| CONFIG['ignore'].find {|ig| File.fnmatch(ig.strip, f)}}
+end
+
 def make_changes(to_commit, updated_files, removed_files)
+	updated_files = filter_ignored_files(updated_files)
+	removed_files = filter_ignored_files(removed_files)
+	
 	make_remote_changes(updated_files, removed_files)
 	
 	# We made it! Update complete; safe to update the list of updates.
@@ -166,10 +173,14 @@ end
 
 # Look in the current directory for the config file.
 def load_config
+	if not File.exists?('gitriol.yml')
+		error('Not a gitriol project')
+	end
+	
 	begin
 		config = YAML.load_file('gitriol.yml')
 	rescue
-		error('Not a gitriol project')
+		error('error loading gitriol project config')
 	end
 end
 
@@ -206,8 +217,8 @@ def update_to_commit(to_commit)
 
 	puts "changes: #{from_commit[0,6]} -> #{to_commit[0,6]}"
 
-	updated_files = git("diff --name-only --diff-filter=AM #{from_commit} #{to_commit}")
-	removed_files = git("diff --name-only --diff-filter=D #{from_commit} #{to_commit}")
+	updated_files = git("diff --name-only --diff-filter=AM #{from_commit} #{to_commit}").split
+	removed_files = git("diff --name-only --diff-filter=D #{from_commit} #{to_commit}").split
 	
 	make_changes(to_commit, updated_files, removed_files)
 end
@@ -282,7 +293,7 @@ end
 def cmd_init
 	to_commit = command_line_commit
 	
-	updated_files = git("ls-tree --name-only -r #{to_commit}")
+	updated_files = git("ls-tree --name-only -r #{to_commit}").split
 	removed_files = Array.new
 	
 	make_changes(to_commit, updated_files, removed_files)
