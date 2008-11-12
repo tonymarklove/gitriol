@@ -188,7 +188,12 @@ def load_passwords
 	begin
 		file = "#{USER_HOME_DIR}/.gitriolpasswd"
 		if File.exists?(file)
-			YAML.load_file(file)
+			passwords = YAML.load_file(file)
+			if passwords.class == Hash.class
+				passwords
+			else
+				{}
+			end
 		else
 			{}
 		end
@@ -289,7 +294,7 @@ end
 
 def cmd_password
 	delete = false
-	project = ''
+	project = nil
 	
 	opts = GetoptLong.new(
 		['--delete', '-d', GetoptLong::NO_ARGUMENT],
