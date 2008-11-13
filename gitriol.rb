@@ -70,7 +70,14 @@ def upload_file(ftp, path)
 	ftp.chdir(FTP_ROOT)
 	ftp_mkdir_p(ftp, path)
 	
-	if TEXT_EXTS.index(File.extname(path)[1..-1].strip.downcase) != nil
+	ext = File.extname(path)[1..-1]
+	if ext
+		ext = ext.strip.downcase
+	else
+		ext = ''
+	end
+	
+	if TEXT_EXTS.index(ext) != nil
 		puts("text mode: #{path}")
 		ftp.puttextfile(path.strip)
 	else
