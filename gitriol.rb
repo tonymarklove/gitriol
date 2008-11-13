@@ -64,7 +64,7 @@ def nlst_all(ftp)
 	return files
 end
 
-TEXT_EXTS = ['php', 'css', 'js', 'txt', 'html', 'xml', 'yml']
+TEXT_EXTS = ['php', 'css', 'js', 'txt', 'html', 'xml', 'yml', 'as', 'htm', 'tpl', 'csv']
 
 def upload_file(ftp, path)
 	ftp.chdir(FTP_ROOT)
