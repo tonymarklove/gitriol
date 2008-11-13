@@ -67,9 +67,6 @@ end
 TEXT_EXTS = ['php', 'css', 'js', 'txt', 'html', 'xml', 'yml', 'as', 'htm', 'tpl', 'csv']
 
 def upload_file(ftp, path)
-	ftp.chdir(FTP_ROOT)
-	ftp_mkdir_p(ftp, path)
-	
 	ext = File.extname(path)[1..-1]
 	if ext
 		ext = ext.strip.downcase
@@ -145,10 +142,20 @@ def make_ftp_changes(updated_files, removed_files)
 	Net::FTP.open($uri.host, username, password) do |ftp|
 		ftp.passive = true
 		ftp.chdir(FTP_ROOT)
+		curDir = '';
 		updated_files.each do |f|
+			nextDir = File.dirname(f)
+			if curDir != nextDir
+				ftp.chdir(FTP_ROOT)
+				puts "chdir #{File.dirname(f)}"
+				ftp_mkdir_p(ftp, f)
+				curDir = nextDir
+			end
+			
 			upload_file(ftp, f)
 		end
 		
+		ftp.chdir(FTP_ROOT)
 		removed_files.each do |f|
 			remove_file(ftp, f)
 		end
