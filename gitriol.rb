@@ -136,6 +136,7 @@ def make_ftp_changes(updated_files, removed_files)
 	end
 
 	Net::FTP.open($uri.host, username, password) do |ftp|
+		ftp.passive = true
 		ftp.chdir(FTP_ROOT)
 		updated_files.each do |f|
 			upload_file(ftp, f)
