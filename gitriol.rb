@@ -293,7 +293,7 @@ def cmd_log
 	$updates.keys.sort.each do |date|
 		commit = $updates[date]
 		puts "#{DateTime.parse(date).strftime('%F %T')}:"
-		puts git("log --pretty=oneline --abbrev-commit #{commit}~..#{commit}")
+		puts git("log --pretty=oneline -n 1 --abbrev-commit #{commit}~..#{commit}")
 		puts
 	end
 end
