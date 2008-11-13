@@ -190,7 +190,7 @@ def load_passwords
 		file = "#{USER_HOME_DIR}/.gitriolpasswd"
 		if File.exists?(file)
 			passwords = YAML.load_file(file)
-			if passwords.class == Hash.class
+			if passwords.class == Hash
 				passwords
 			else
 				{}
