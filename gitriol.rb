@@ -223,8 +223,8 @@ def update_to_commit(to_commit)
 
 	puts "changes: #{from_commit[0,6]} -> #{to_commit[0,6]}"
 
-	updated_files = git("diff --name-only --diff-filter=AM #{from_commit} #{to_commit}").split
-	removed_files = git("diff --name-only --diff-filter=D #{from_commit} #{to_commit}").split
+	updated_files = git("diff --name-only --diff-filter=AM #{from_commit} #{to_commit}").split($/)
+	removed_files = git("diff --name-only --diff-filter=D #{from_commit} #{to_commit}").split($/)
 	
 	make_changes(to_commit, updated_files, removed_files)
 end
@@ -287,7 +287,7 @@ end
 def cmd_init
 	to_commit = command_line_commit
 	
-	updated_files = git("ls-tree --name-only -r #{to_commit}").split
+	updated_files = git("ls-tree --name-only -r #{to_commit}").split($/)
 	removed_files = Array.new
 	
 	make_changes(to_commit, updated_files, removed_files)
