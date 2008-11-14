@@ -2,8 +2,11 @@
 # usage: gitriol COMMAND [ARGS]
 #
 # common commands:
-#   deploy
-#   revert
+#   init - begin managing project and upload specific commit
+#   deploy - deploy a specific commit
+#   revert - revert a previous deployment
+#   log - view recent deployments / reverts
+#   password - add, change and delete project passwords
 
 
 require 'yaml'
@@ -11,6 +14,7 @@ require 'net/ftp'
 require 'pathname'
 require 'getoptlong'
 require 'rdoc/usage'
+require File.dirname(__FILE__) + '/cmd_usage'
 
 require 'highline/import'
 
@@ -313,6 +317,7 @@ def cmd_password
 	
 	opts = GetoptLong.new(
 		['--delete', '-d', GetoptLong::NO_ARGUMENT],
+		['--help', '-h', GetoptLong::NO_ARGUMENT],
 		['--project', '-p', GetoptLong::REQUIRED_ARGUMENT]
 	)
 	
@@ -322,6 +327,9 @@ def cmd_password
 				delete = true
 			when '--project'
 				project = arg
+			when '--help'
+				puts CMD_PASSWORD_USAGE
+				exit
 		end
 	end
 
