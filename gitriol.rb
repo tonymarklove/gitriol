@@ -254,11 +254,26 @@ end
 def command_line_commit
 	# Git ref to update to should now be on top.
 	to_commit = ARGV.shift
-	if to_commit
-		to_commit = git("rev-parse #{to_commit}").strip
-	else
-		to_commit = git('rev-parse HEAD').strip
+	
+	if !to_commit
+		to_commit = CONFIG['upload']
 	end
+	
+	if !to_commit
+		answer = ''
+		while not (answer == 'y' or answer == 'n')
+			print 'no commit to upload, use HEAD? (y/n): '
+			answer = gets.strip.downcase
+		end
+		
+		if answer == 'n'
+			exit
+		end
+		
+		to_commit = 'HEAD'
+	end
+	
+	to_commit = git("rev-parse #{to_commit}").strip
 end
 
 def cmd_deploy
