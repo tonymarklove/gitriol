@@ -251,6 +251,16 @@ def common_setup
 	$updates = load_updates
 end
 
+def answer_yes(msg)
+	answer = ''
+	while not (answer == 'y' or answer == 'n')
+		print msg
+		answer = gets.strip.downcase
+	end
+	
+	answer == 'y'
+end
+
 def command_line_commit
 	# Git ref to update to should now be on top.
 	to_commit = ARGV.shift
@@ -260,16 +270,7 @@ def command_line_commit
 	end
 	
 	if !to_commit
-		answer = ''
-		while not (answer == 'y' or answer == 'n')
-			print 'no commit to upload, use HEAD? (y/n): '
-			answer = gets.strip.downcase
-		end
-		
-		if answer == 'n'
-			exit
-		end
-		
+		exit unless answer_yes('no commit to upload, use HEAD? (y/n): ')
 		to_commit = 'HEAD'
 	end
 	
@@ -280,6 +281,15 @@ def cmd_deploy
 	common_setup
 
 	to_commit = command_line_commit
+	
+	# Make sure this is a fast-forward deploy
+	from_commit = $updates[$updates.keys.sort.last]
+	merge_bases = git("merge-base --all #{to_commit} #{from_commit}").split($/)
+	
+	if merge_bases.length != 1 or merge_bases.last != from_commit
+		exit unless answer_yes('not fast-forward. continue? (y/n): ')
+	end
+	
 	update_to_commit(to_commit)
 end
 
