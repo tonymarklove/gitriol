@@ -173,7 +173,11 @@ def make_remote_changes(updated_files, removed_files)
 end
 
 def filter_ignored_files(files)
-	files.reject {|f| CONFIG['ignore'].find {|ig| File.fnmatch(ig.strip, f)}}
+	if CONFIG['ignore']
+		files.reject {|f| CONFIG['ignore'].find {|ig| File.fnmatch(ig.strip, f)}}
+	else
+		files
+	end
 end
 
 def make_changes(to_commit, updated_files, removed_files)
