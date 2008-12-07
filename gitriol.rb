@@ -332,6 +332,11 @@ def cmd_log
 end
 
 def cmd_init
+	common_setup
+	if $updates.length > 0
+		exit unless answer_yes('project exists in repo. overwrite? (y/n): ')
+	end
+	
 	to_commit = command_line_commit
 	
 	updated_files = git("ls-tree --name-only -r #{to_commit}").split($/)
