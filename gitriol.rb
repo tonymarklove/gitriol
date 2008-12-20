@@ -180,18 +180,22 @@ def filter_ignored_files(files)
 	end
 end
 
-def make_changes(to_commit, updated_files, removed_files)
-	updated_files = filter_ignored_files(updated_files)
-	removed_files = filter_ignored_files(removed_files)
-	
-	make_remote_changes(updated_files, removed_files)
-	
+def save_update(to_commit)
 	# We made it! Update complete; safe to update the list of updates.
 	$updates[DateTime.now.to_s] = to_commit
 
 	File.open("#{GITRIOL_REPO_DIR}#{CONFIG['name']}.yml", 'w') do |f|
 		f.write $updates.to_yaml
 	end
+end
+
+def make_changes(to_commit, updated_files, removed_files)
+	updated_files = filter_ignored_files(updated_files)
+	removed_files = filter_ignored_files(removed_files)
+	
+	make_remote_changes(updated_files, removed_files)
+	
+	save_update(to_commit)
 end
 
 # Look in the current directory for the config file.
@@ -282,12 +286,17 @@ def command_line_commit
 end
 
 def cmd_deploy
+	fake = false
+	
 	opts = GetoptLong.new(
+		['--fake', '-f', GetoptLong::NO_ARGUMENT],
 		['--help', '-h', GetoptLong::NO_ARGUMENT]
 	)
 	
 	opts.each do |opt, arg|
 		case opt
+			when '--fake'
+				fake = true
 			when '--help'
 				puts CMD_DEPLOY_USAGE
 				exit
@@ -306,7 +315,11 @@ def cmd_deploy
 		exit unless answer_yes('not fast-forward. continue? (y/n): ')
 	end
 	
-	update_to_commit(to_commit)
+	if fake
+		save_update(to_commit)
+	else
+		update_to_commit(to_commit)
+	end
 end
 
 def cmd_revert

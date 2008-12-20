@@ -1,9 +1,13 @@
 CMD_DEPLOY_USAGE = <<USAGE
-gitriol deploy [<commit-ish>]
+gitriol deploy [<commit-ish>] [OPTIONS]
 
 Deploy changes between the last uploaded commit and the commit supplied. Commit
 supplied is taken from, in preference order: command line, 'upload' config
 setting, HEAD (with confirmation prompt).
+
+options:
+  -f, --fake
+    Save the commit as a new deployment without actually uploading any files.
 USAGE
 
 
