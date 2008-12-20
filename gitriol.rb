@@ -79,10 +79,10 @@ def upload_file(ftp, path)
 	end
 	
 	if TEXT_EXTS.index(ext) != nil
-		puts("text mode: #{path}")
+		puts("[t] #{path}")
 		ftp.puttextfile(path.strip)
 	else
-		puts("binary mode: #{path}")
+		puts("[b] #{path}")
 		ftp.putbinaryfile(path.strip)
 	end
 end
