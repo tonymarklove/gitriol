@@ -282,6 +282,18 @@ def command_line_commit
 end
 
 def cmd_deploy
+	opts = GetoptLong.new(
+		['--help', '-h', GetoptLong::NO_ARGUMENT]
+	)
+	
+	opts.each do |opt, arg|
+		case opt
+			when '--help'
+				puts CMD_DEPLOY_USAGE
+				exit
+		end
+	end
+
 	common_setup
 
 	to_commit = command_line_commit
@@ -298,6 +310,18 @@ def cmd_deploy
 end
 
 def cmd_revert
+	opts = GetoptLong.new(
+		['--help', '-h', GetoptLong::NO_ARGUMENT]
+	)
+	
+	opts.each do |opt, arg|
+		case opt
+			when '--help'
+				puts CMD_REVERT_USAGE
+				exit
+		end
+	end
+
 	common_setup
 	
 	# Top of the stack should now be either a date or an integer number of steps
@@ -321,17 +345,59 @@ def cmd_revert
 end
 
 def cmd_log
+	limit = 10
+	show_all = false
+	
+	opts = GetoptLong.new(
+		['--all', '-a', GetoptLong::NO_ARGUMENT],
+		['--help', '-h', GetoptLong::NO_ARGUMENT],
+		['--limit', '-l', GetoptLong::REQUIRED_ARGUMENT]
+	)
+	
+	opts.each do |opt, arg|
+		case opt
+			when '--all'
+				show_all = true
+			when '--help'
+				puts CMD_LOG_USAGE
+				exit
+			when '--limit'
+				limit = arg
+				exit
+		end
+	end
+
 	common_setup
 	
-	$updates.keys.sort.each do |date|
+	str = ''
+	commit_count = 0
+	$updates.keys.sort.reverse_each do |date|
 		commit = $updates[date]
-		puts "#{DateTime.parse(date).strftime('%F %T')}:"
-		puts git("log --pretty=oneline -n 1 --abbrev-commit #{commit}~..#{commit}")
-		puts
+		str += "#{DateTime.parse(date).strftime('%F %T')}:\n"
+		str += git("log --pretty=oneline -n 1 --abbrev-commit #{commit}~..#{commit}").strip + "\n\n"
+		
+		commit_count += 1
+		if commit_count >= limit and not show_all
+			break
+		end
 	end
+	
+	puts str
 end
 
 def cmd_init
+	opts = GetoptLong.new(
+		['--help', '-h', GetoptLong::NO_ARGUMENT]
+	)
+	
+	opts.each do |opt, arg|
+		case opt
+			when '--help'
+				puts CMD_INIT_USAGE
+				exit
+		end
+	end
+
 	common_setup
 	if $updates.length > 0
 		exit unless answer_yes('project exists in repo. overwrite? (y/n): ')
