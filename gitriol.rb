@@ -22,8 +22,13 @@ def get_password(msg)
 	ask(msg) { |q| q.echo = false }
 end
 
-def git(params)
-	`git #{params}`
+def git(params, error_msg=nil)
+	result = `git #{params}`
+	if $?.exitstatus != 0 and error_msg
+		error(error_msg === true ? result : error_msg)
+	end
+	
+	result
 end
 
 def error(msg)
@@ -193,7 +198,29 @@ def make_changes(to_commit, updated_files, removed_files)
 	updated_files = filter_ignored_files(updated_files)
 	removed_files = filter_ignored_files(removed_files)
 	
-	make_remote_changes(updated_files, removed_files)
+	# Check the working copy is clean.
+	git('update-index --ignore-submodules --refresh', true)
+	index_files = git('diff-index --cached --name-status -r --ignore-submodules HEAD --').split($/)
+	if index_files.length > 0
+		error('cannot deploy: your index is not up-to-date')
+	end
+	
+	# Checkout the required commit.
+	orig_head = nil
+	if git('rev-parse HEAD').strip != to_commit
+		orig_head = git('symbolic-ref -q HEAD').strip
+		git("checkout -q #{to_commit}", 'could not detach HEAD')
+	end
+	
+	begin
+		make_remote_changes(updated_files, removed_files)
+	ensure
+		# Reset to original HEAD
+		if orig_head
+			git("symbolic-ref HEAD #{orig_head}")
+			git("reset --hard", 'could not reset to orig_head')
+		end
+	end
 	
 	save_update(to_commit)
 end
