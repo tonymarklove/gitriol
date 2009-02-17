@@ -305,7 +305,7 @@ def command_line_commit
 	end
 	
 	if !to_commit
-		exit unless answer_yes('no commit to upload, use HEAD? (y/n): ')
+		exit unless answer_yes('no commit to upload, use HEAD (not recommended)? (y/n): ')
 		to_commit = 'HEAD'
 	end
 	
