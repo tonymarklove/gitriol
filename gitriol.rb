@@ -257,12 +257,14 @@ def load_passwords
 end
 
 # Load all the previously deployed updates
-def load_updates
+def load_updates(show_errors)
 	# Use the project name from the config to get the list of all previous deployments.
 	begin
 		updates = YAML.load_file("#{GITRIOL_REPO_DIR}#{CONFIG['name']}.yml")
 	rescue
-		error("Can't find project '#{CONFIG['name']}' in repo: #{GITRIOL_REPO_DIR}\nDo you need to gitriol init?")
+		if show_errors
+			error("Can't find project '#{CONFIG['name']}' in repo: #{GITRIOL_REPO_DIR}\nDo you need to gitriol init?")
+		end
 	end
 end
 
@@ -282,8 +284,8 @@ def update_to_commit(to_commit)
 	make_changes(to_commit, updated_files, removed_files)
 end
 
-def common_setup
-	$updates = load_updates
+def common_setup(show_errors=true)
+	$updates = load_updates(show_errors)
 end
 
 def answer_yes(msg)
@@ -438,8 +440,8 @@ def cmd_init
 		end
 	end
 
-	common_setup
-	if $updates.length > 0
+	common_setup(false)
+	if $updates != nil
 		exit unless answer_yes('project exists in repo. overwrite? (y/n): ')
 	end
 	
