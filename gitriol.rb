@@ -64,12 +64,13 @@ end
 def nlst_all(ftp)
 	files = []
 	begin
-		ftp.retrlines('NLST -A') do |l|
-			files.push(l)
-	end
+		files = ftp.nlst()
 	rescue Net::FTPReplyError => resp
 		raise if resp.message[0,3] != '226'
 	end
+	
+	# Filter out . and .. files
+	files = files.select {|f| f != '.' and f != '..'}	
 	return files
 end
 
