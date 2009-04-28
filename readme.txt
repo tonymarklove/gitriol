@@ -38,3 +38,50 @@ Possible Future Features
 - Support other SCMs. (Esp. SVN and HG.)
 - Support other file transfer protocols: SSH, SFTP.
 - Provide scripting hooks at various stages.
+
+
+Getting Started
+---
+
+There are a couple of step you need to take when you first install Gitriol:
+
+
+1. Install Ruby
+--
+
+
+2. Install Gitriol
+--
+Which simply means cloning it, or unzipping it somewhere.
+
+
+3. Create Store Directory
+--
+Gitriol keeps track of versions by writing YAML files to a store directory.
+This directory can be created anywhere you like as long as Gitriol has write
+access.
+
+Finally you need to create the GITRIOL_REPO environment variable which points
+to the directory you have just created. (Make sure to include a trailing slash!)
+
+
+
+Creating a Project
+---
+
+1. Add gitriol.yml
+--
+Gitriol's project config file is called gitriol.yml and sits in the root
+directory of your project.
+
+See the config.txt file for full details about configuring gitriol.
+
+
+2. Initialize the project
+--
+Run "gitriol.rb init" to create the project and make the first deployment.
+
+
+3. Deploy
+--
+Each time you want to upload your changes run "gitriol.rb deploy".
