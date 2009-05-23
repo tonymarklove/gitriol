@@ -11,6 +11,7 @@
 
 require 'yaml'
 require 'net/ftp'
+require 'net/sftp'
 require 'pathname'
 require 'getoptlong'
 require 'rdoc/usage'
@@ -130,9 +131,24 @@ class Hash
 	end
 end
 
-def make_ftp_changes(updated_files, removed_files)
-	# Get username and password
-	puts "#{$uri.host} login:"
+class Array
+  def chunk(pieces=2)
+    len = self.length;
+    mid = (len/pieces)
+    chunks = []
+    start = 0
+    1.upto(pieces) do |i|
+      last = start+mid
+      last = last-1 unless len%pieces >= i
+      chunks << self[start..last] || []
+      start = last+1
+    end
+    chunks
+  end
+end
+
+
+def get_username_password
 	username = $uri.user
 	unless username
 		print 'username: '
@@ -148,6 +164,13 @@ def make_ftp_changes(updated_files, removed_files)
 			password = get_password('password: ')
 		end
 	end
+	
+	return username, password
+end
+
+def make_ftp_changes(updated_files, removed_files)
+	puts "logging in via FTP (#{$uri.host})"
+	username, password = get_username_password
 
 	Net::FTP.open($uri.host, username, password) do |ftp|
 		ftp.passive = true
@@ -172,10 +195,53 @@ def make_ftp_changes(updated_files, removed_files)
 	end
 end
 
+def make_sftp_changes(updated_files, removed_files)
+	puts "logging in via SFTP (#{$uri.host})"
+	username, password = get_username_password
+	
+	Net::SFTP.start($uri.host, username, :password => password) do |sftp|
+		# First run through and create any directories.
+		dirs = []
+		file_dirs = updated_files.map { |f| File.dirname(f) }.uniq
+		file_dirs.each do |d|
+			current_dir = ''
+			Pathname.new(d).each_filename do |dir|
+				next if dir == '.'
+				current_dir += "#{dir}/"
+				dirs.push(current_dir)
+			end
+		end
+		dirs.uniq!
+		dirs.map { |d| sftp.mkdir("#{FTP_ROOT}/#{d}").wait }
+		
+		# Split the files into groups
+		chunks = updated_files.chunk((updated_files.length / 4).to_int)
+		
+		chunks.each do |chunk|
+			uploads = chunk.map do |f|
+				sftp.upload(f, "#{FTP_ROOT}/#{f}") do |event, uploader, *args|
+					case event
+						when :open then puts "[up] #{f}"
+					end
+				end
+			end
+			uploads.each { |u| u.wait }
+		end
+		
+		removed_files.map do |f| 
+			puts "remove #{f}"
+			sftp.remove!(f)
+		end
+	end
+end
+
 # This is the engine powering the remote changes. These could be an upload via
 # FTP, SCP, or whatever; or doing a file copy.
 def make_remote_changes(updated_files, removed_files)
-	make_ftp_changes(updated_files, removed_files)
+	case $uri.scheme
+		when "sftp" then make_sftp_changes(updated_files, removed_files)
+		else make_ftp_changes(updated_files, removed_files)
+	end
 end
 
 def filter_ignored_files(files)
