@@ -512,6 +512,7 @@ def cmd_init
 		exit unless answer_yes('project exists in repo. overwrite? (y/n): ')
 	end
 	
+	$updates = {}
 	to_commit = command_line_commit
 	
 	updated_files = git("ls-tree --name-only -r #{to_commit}").split($/)
