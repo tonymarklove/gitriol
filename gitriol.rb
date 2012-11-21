@@ -235,12 +235,46 @@ def make_sftp_changes(updated_files, removed_files)
 	end
 end
 
+def make_ftpfxptls_changes(updated_files, removed_files)
+	require 'ftpfxp'
+
+	puts "logging in via FTPFXPTLS (#{$uri.host})"
+	username, password = get_username_password
+
+	Net::FTPFXPTLS.open($uri.host, username, password) do |ftpfxptls|
+		ftpfxptls.passive = true
+		ftpfxptls.chdir(FTP_ROOT)
+		curDir = '';
+
+		updated_files.each do |f|
+			nextDir = File.dirname(f)
+			if curDir != nextDir
+				ftpfxptls.chdir(FTP_ROOT)
+				puts "chdir #{File.dirname(f)}"
+				ftp_mkdir_p(ftpfxptls, f)
+				curDir = nextDir
+			end
+
+			upload_file(ftpfxptls, f)
+		end
+
+		ftpfxptls.chdir(FTP_ROOT)
+		removed_files.each do |f|
+			remove_file(ftpfxptls, f)
+		end
+	end
+end
+
 # This is the engine powering the remote changes. These could be an upload via
 # FTP, SCP, or whatever; or doing a file copy.
 def make_remote_changes(updated_files, removed_files)
 	case $uri.scheme
-		when "sftp" then make_sftp_changes(updated_files, removed_files)
-		else make_ftp_changes(updated_files, removed_files)
+		when "sftp"
+			then make_sftp_changes(updated_files, removed_files)
+		when "ftpfxptls"
+			then make_ftpfxptls_changes(updated_files, removed_files)
+		else
+			make_ftp_changes(updated_files, removed_files)
 	end
 end
 
